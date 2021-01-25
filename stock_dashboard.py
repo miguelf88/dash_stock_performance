@@ -85,7 +85,10 @@ def render_content(tab):
         return html.Div([
             html.H1('Asset Performance'),
             html.Div([
-                dcc.Graph(id='performance_chart')
+                dcc.Graph(
+                    id='performance_chart',
+                    style={'width': "40%"}
+                )
             ])
         ])
 
@@ -184,22 +187,51 @@ def stock_performance(tickers):
     stocks = stocks.transpose()
     stocks.columns = tickers
 
-    performance_chart = px.line(stocks,
-                                x=stocks.index,
-                                y=stocks.columns,
-                                labels={
-                                    'index': 'Date',
-                                    'value': 'Asset Price',
-                                    'variable': 'Symbol'
-                                })
+    performance_chart = px.line(
+        stocks,
+        x=stocks.index,
+        y=stocks.columns,
+        labels={
+            'index': 'Date',
+            'value': 'Asset Price',
+            'variable': 'Symbol'
+        }
+    )
     performance_chart.update_traces(hovertemplate='Date: %{x}<br>Price: %{y:$,.2f}')
     performance_chart.update_layout(yaxis_tickformat='$')
-    performance_chart.update_layout(legend=dict(
-        yanchor="top",
-        y=0.99,
-        xanchor="left",
-        x=0.01
-    ))
+    performance_chart.update_layout(
+        legend=dict(
+            yanchor="top",
+            y=0.99,
+            xanchor="left",
+            x=0.01
+        )
+    )
+    performance_chart.update_layout(
+        xaxis=dict(
+            rangeselector=dict(
+                buttons=list([
+                    dict(count=1,
+                         label="1m",
+                         step="month",
+                         stepmode="backward"),
+                    dict(count=6,
+                         label="6m",
+                         step="month",
+                         stepmode="backward"),
+                    dict(count=1,
+                         label="YTD",
+                         step="year",
+                         stepmode="todate"),
+                    dict(count=1,
+                         label="1y",
+                         step="year",
+                         stepmode="backward"),
+                    dict(step="all")
+                ])
+            )
+        )
+    )
 
     return performance_chart
 
