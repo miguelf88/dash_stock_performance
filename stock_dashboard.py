@@ -10,33 +10,18 @@ import pandas as pd
 
 
 # ------------------------------------------------
-app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
+# external_stylesheets = ['codepen url']
+
+app = dash.Dash(__name__)  # external_stylesheets=external_stylesheets)
 server = app.server
 app.config.suppress_callback_exceptions = True
 
 
 # ------------------------------------------------
-tabs_styles = {
-    'height': '44px'
-}
-tab_style = {
-    'borderBottom': '1px solid #d6d6d6',
-    'padding': '6px',
-    'fontWeight': 'bold'
-}
-
-tab_selected_style = {
-    'borderTop': '1px solid #d6d6d6',
-    'borderBottom': '1px solid #d6d6d6',
-    'backgroundColor': '#119DFF',
-    'color': 'white',
-    'padding': '6px'
-}
-
-
-# ------------------------------------------------
 # set the layout
 app.layout = html.Div([
+
+    html.H1('Stock Dashboard version 2.0'),
 
     html.Label(['Enter stock symbols separated by a comma: '], style={'font-weight': 'bold'}),
 
@@ -52,51 +37,35 @@ app.layout = html.Div([
 
     html.Br(),
 
-    dcc.Tabs(id='tabs', value='corr_matrix', children=[
-        dcc.Tab(label='Correlation Matrix', value='corr_matrix', style=tab_style, selected_style=tab_selected_style),
-        dcc.Tab(label='Performance', value='performance', style=tab_style, selected_style=tab_selected_style)
-    ], style=tabs_styles),
+    html.Div([
 
-    html.Div(id='tabs-content')
+        dbc.Row([
+            dbc.Col(dcc.Graph(
+                id='corr_chart',
+                config={'displayModeBar': False}
+            )),
+            dbc.Col(dcc.Graph(
+                id='performance_chart',
+                config={'displayModeBar': False}
+            ))
+        ]),
+
+        dbc.Row([
+            dbc.Col(html.P(id='corr_desc', style={'width': '80%'})),
+            dbc.Col(html.P('PLACEHOLDER'))
+        ])
+    ])
 
 ])
 
 
 # -----------------------------------------------------
-# callback to control the tab selection
-@app.callback(
-    Output('tabs-content', 'children'),
-    [Input('tabs', 'value')]
-)
-def render_content(tab):
-    if tab == 'corr_matrix':
-        return html.Div([
-            html.H1('Asset Correlation Matrix'),
-            dbc.Row(
-                [
-                    dbc.Col(dcc.Graph(id='corr_chart')),
-                    dbc.Col(html.P(id='corr_desc'))
-                ]
-            )
 
-        ])
-
-    elif tab == 'performance':
-        return html.Div([
-            html.H1('Asset Performance'),
-            html.Div([
-                dcc.Graph(
-                    id='performance_chart',
-                    style={'width': "40%"}
-                )
-            ])
-        ])
-
-
-# callback to generate correlation tab
+# callback to content
 @app.callback(
     [Output('corr_chart', 'figure'),
-     Output('corr_desc', 'children')],
+     Output('corr_desc', 'children'),
+     Output('performance_chart', 'figure')],
     [Input('tickers', 'value')]
 )
 def correlation_analysis(tickers):
@@ -123,7 +92,10 @@ def correlation_analysis(tickers):
     stocks.columns = tickers
 
     # create correlation matrix
-    corr_matrix = px.imshow(stocks.corr()[tickers])
+    corr_matrix = px.imshow(
+        stocks.corr()[tickers],
+        title='Correlation Matrix'
+    )
 
     # define function to get lower part of correlation matrix
     def get_redundant_pairs(df):
@@ -156,37 +128,7 @@ def correlation_analysis(tickers):
                 ' with the lowest correlation are ' + low_corr_label_1 + ' and ' + low_corr_label_2 + '. They have' \
                 ' a correlation of ' + str(low_corr_value) + '.'
 
-    return corr_matrix, statement
-
-
-# callback to generate performance chart
-@app.callback(
-    Output('performance_chart', 'figure'),
-    [Input('tickers', 'value')]
-)
-def stock_performance(tickers):
-
-    # list of tickers
-    tickers = tickers.replace(' ', '').split(',')
-    # converts list to uppercase
-    for ticker in range(len(tickers)):
-        tickers[ticker] = tickers[ticker].upper()
-
-    # create empty dataframe
-    stocks = pd.DataFrame()
-
-    # iterate through tickers and grab
-    # all historical closing prices
-    # and append to dataframe
-    for ticker in tickers:
-        symbol = yf.Ticker(ticker)
-        stock_close = symbol.history(period='max')['Close']
-        stocks = stocks.append(stock_close)
-
-    # reshape dataframe and rename columns
-    stocks = stocks.transpose()
-    stocks.columns = tickers
-
+    # generate performance chart
     performance_chart = px.line(
         stocks,
         x=stocks.index,
@@ -195,7 +137,9 @@ def stock_performance(tickers):
             'index': 'Date',
             'value': 'Asset Price',
             'variable': 'Symbol'
-        }
+        },
+        title='Performance Chart',
+        template='simple_white'
     )
     performance_chart.update_traces(hovertemplate='Date: %{x}<br>Price: %{y:$,.2f}')
     performance_chart.update_layout(yaxis_tickformat='$')
@@ -233,7 +177,7 @@ def stock_performance(tickers):
         )
     )
 
-    return performance_chart
+    return corr_matrix, statement, performance_chart
 
 
 # -----------------------------------------------------
