@@ -10,9 +10,8 @@ import pandas as pd
 
 
 # ------------------------------------------------
-# external_stylesheets = ['codepen url']
 
-app = dash.Dash(__name__)  # external_stylesheets=external_stylesheets)
+app = dash.Dash(__name__)
 server = app.server
 app.config.suppress_callback_exceptions = True
 
@@ -21,9 +20,14 @@ app.config.suppress_callback_exceptions = True
 # set the layout
 app.layout = html.Div([
 
+    html.Link(
+        rel='stylesheet',
+        href='/assets/style.css'
+    ),
+
     html.H1('Stock Dashboard version 2.0'),
 
-    html.Label(['Enter stock symbols separated by a comma: '], style={'font-weight': 'bold'}),
+    html.Label(['Enter stock symbols separated by a comma: '], id='input_label', style={'font-weight': 'bold'}),
 
     html.Br(),
 

@@ -1,0 +1,31 @@
+* {
+  background-color: 7f7f7f;
+  font-family: Arial;
+}
+
+#input_label {
+  margin-left: 10px;
+}
+
+#tickers {
+  margin-left: 10px;
+}
+
+#corr_chart {
+  width: 40%;
+  float: left;
+}
+
+#performance_chart {
+  width: 40%;
+  float: right;
+}
+
+#corr_desc {
+  padding: 5px;
+  float: left;
+}
+
+h1 {
+
+}
