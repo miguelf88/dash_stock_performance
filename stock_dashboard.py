@@ -11,58 +11,110 @@ import pandas as pd
 
 # ------------------------------------------------
 
-app = dash.Dash(__name__)
+app = dash.Dash(__name__, external_stylesheets=[dbc.themes.MINTY])
 server = app.server
 app.config.suppress_callback_exceptions = True
 
 
 # ------------------------------------------------
 # set the layout
+
 app.layout = html.Div([
 
-    html.Link(
-        rel='stylesheet',
-        href='/assets/style.css'
-    ),
+    html.H1(
+        'Stock Dashboard version 2.0',
+        style={
+            'padding-top': '15px',
+            'padding-left': '10px',
+            'padding-bottom': '5px',
+            'color': 'white',
+            'font-weight': 'bold'
+        }, className="navbar navbar-expand-lg navbar-dark bg-primary"),
 
-    html.H1('Stock Dashboard version 2.0'),
+    html.Div([
 
-    html.Label(['Enter stock symbols separated by a comma: '], id='input_label', style={'font-weight': 'bold'}),
+        html.Label(
+            ['Enter stock symbols separated by a comma: '],
+            style={
+                'color': '#111111',
+                'font-weight': 'bold'
+            }
+        ),
 
-    html.Br(),
+        html.Br(),
 
-    dcc.Input(id='tickers',
-              type='text',
-              debounce=True,
-              autoFocus=True,
-              value='spy, gbtc, vnq, pltr',
-              spellCheck=False,
-              style={'width': "20%"}),
+        dcc.Input(
+            id='tickers',
+            type='text',
+            debounce=True,
+            autoFocus=True,
+            value='spy, gbtc',  # , vnq, pltr',
+            spellCheck=False,
+            style={'width': "20%"},
+        )
+
+    ], style={
+        'background-color': '#E8E8E8',
+        'padding-left': '12px',
+        'padding-bottom': '10px',
+        'padding-top': '12px',
+        'margin-top': '-8px'
+    }),
 
     html.Br(),
 
     html.Div([
 
         dbc.Row([
-            dbc.Col(dcc.Graph(
-                id='corr_chart',
-                config={'displayModeBar': False}
-            )),
-            dbc.Col(dcc.Graph(
-                id='performance_chart',
-                config={'displayModeBar': False}
-            ))
+            dbc.Col(
+                dcc.Graph(
+                    id='corr_chart',
+                    config={'displayModeBar': False}
+                ), width=5
+            ),
+            dbc.Col(
+                dcc.Graph(
+                    id='performance_chart',
+                    config={'displayModeBar': False}
+                ), width={
+                    'size': 6,
+                    'offset': 1
+                }
+            )
         ]),
 
         dbc.Row([
-            dbc.Col(html.P(id='corr_desc', style={'width': '80%'})),
-            dbc.Col(html.P('PLACEHOLDER'))
+            dbc.Col(
+                html.P(
+                    id='corr_desc',
+                    style={'width': '80%'}
+                )
+            ),
+            dbc.Col(
+                html.P(
+                    'PLACEHOLDER',
+                    id='placeholder',
+                    className="text-primary"
+                )
+            )
         ])
-    ])
+    ], id='content'),
+
+    html.Footer(
+        'Created by Miguel Fernandez using Dash by Plotly, 2021',
+        style={
+            'position': 'absolute',
+            'bottom': 0,
+            'background-color': '#E8E8E8',
+            'width': '100%',
+            'padding-top': '10px',
+            'padding-right': '20px',
+            'padding-bottom': '10px',
+            'text-align': 'right'
+        }
+    )
 
 ])
-
-
 # -----------------------------------------------------
 
 # callback to content
