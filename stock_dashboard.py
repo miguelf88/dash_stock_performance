@@ -1,5 +1,6 @@
 import yfinance as yf
 import dash
+import dash_table as dt
 import dash_bootstrap_components as dbc
 import dash_core_components as dcc
 import dash_html_components as html
@@ -91,17 +92,32 @@ app.layout = html.Div([
                 )
             ),
             dbc.Col(
-                html.P(
-                    'PLACEHOLDER',
-                    id='placeholder',
-                    className="text-primary"
+                html.Div(
+                    id='performance_table',
+                    style={
+                        'padding-right': '30px'
+                    }
                 )
             )
         ])
     ], id='content'),
 
     html.Footer(
-        'Created by Miguel Fernandez using Dash by Plotly, 2021',
+        [
+            'Created by ',
+            html.A(
+                'Miguel Fernandez',
+                href='https://miguelf88.github.io/',
+                target='_blank'
+            ),
+            ' using ',
+            html.A(
+                'Dash by Plotly',
+                href='https://plotly.com/dash/',
+                target='_blank'
+            ),
+            ', 2021'
+        ],
         style={
             'position': 'absolute',
             'bottom': 0,
@@ -121,7 +137,8 @@ app.layout = html.Div([
 @app.callback(
     [Output('corr_chart', 'figure'),
      Output('corr_desc', 'children'),
-     Output('performance_chart', 'figure')],
+     Output('performance_chart', 'figure'),
+     Output('performance_table', 'children')],
     [Input('tickers', 'value')]
 )
 def correlation_analysis(tickers):
@@ -233,7 +250,56 @@ def correlation_analysis(tickers):
         )
     )
 
-    return corr_matrix, statement, performance_chart
+    # generate performance table
+    # calculate one day returns
+    oneDayReturn = round((stocks.pct_change() * 100).iloc[-1], 2)
+
+    # calculate monthly returns
+    monthlyReturns = stocks.resample('M').ffill().pct_change()
+
+    # calculate one month returns
+    oneMonthReturn = round(monthlyReturns.iloc[-2] * 100, 2)
+
+    # calculate three month returns
+    threeMonthReturn = round(monthlyReturns.iloc[-4:-1].sum() * 100, 2)
+
+    # calculate yearly returns
+    yearlyReturns = stocks.resample('Y').ffill().pct_change()
+
+    # calculate year to date returns
+    ytdReturn = round(yearlyReturns.iloc[-1] * 100, 2)
+
+    # calculate one year returns
+    oneYearReturn = round(yearlyReturns.iloc[-2] * 100, 2)
+
+    # calculate three year returns
+    threeYearReturn = round((yearlyReturns.iloc[-4:-1] * 100).dropna(axis=1).mean(), 2)
+
+    # calculate five year returns
+    fiveYearReturn = round((yearlyReturns.iloc[-6:-1] * 100).dropna(axis=1).mean(), 2)
+
+    # calculate ten year returns
+    tenYearReturn = round((yearlyReturns.iloc[-11:-1] * 100).dropna(axis=1).mean(), 2)
+
+    # create performance table by merging series
+    performance_table = pd.concat([
+        oneDayReturn, oneMonthReturn, threeMonthReturn, ytdReturn, oneYearReturn, threeYearReturn,
+        fiveYearReturn, tenYearReturn
+    ], axis=1)
+    performance_table.reset_index(inplace=True)
+    performance_table.columns = [
+        'Asset', '1-Day Return', '1-Month Return', '3-Month Return', 'YTD Return', '1-Year Return', '3-Year Return',
+        '5-Year Return', '10-Year Return'
+    ]
+    data = performance_table.to_dict('records')
+    columns = [{"name": i, "id": i, } for i in performance_table.columns]
+    data_table = dt.DataTable(data=data,
+                              columns=columns,
+                              sort_action='native')
+
+    print(performance_table)
+
+    return corr_matrix, statement, performance_chart, data_table
 
 
 # -----------------------------------------------------
