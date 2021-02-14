@@ -5,6 +5,7 @@ import dash_bootstrap_components as dbc
 import dash_core_components as dcc
 import dash_html_components as html
 from dash.dependencies import Input, Output
+from dash_table.Format import Format
 import plotly.express as px
 
 import pandas as pd
@@ -286,16 +287,36 @@ def correlation_analysis(tickers):
         oneDayReturn, oneMonthReturn, threeMonthReturn, ytdReturn, oneYearReturn, threeYearReturn,
         fiveYearReturn, tenYearReturn
     ], axis=1)
+    # reset the index so ticker symbols become column in table
     performance_table.reset_index(inplace=True)
+    # name columns
     performance_table.columns = [
         'Asset', '1-Day Return', '1-Month Return', '3-Month Return', 'YTD Return', '1-Year Return', '3-Year Return',
         '5-Year Return', '10-Year Return'
     ]
+
+    # construct the data table
     data = performance_table.to_dict('records')
     columns = [{"name": i, "id": i, } for i in performance_table.columns]
-    data_table = dt.DataTable(data=data,
-                              columns=columns,
-                              sort_action='native')
+    data_table = dt.DataTable(
+        data=data,
+        columns=columns,
+        sort_action='native',
+        style_cell_conditional=[
+            {
+                'if': {'column_id': 'Asset'},
+                'textAlign': 'left'
+            }
+        ],
+        style_header={
+            'backgroundColor': '#78C2AD',
+            'color': 'white',
+            'border': '1px solid white'
+        },
+        style_data={
+            'border': '1px solid white'
+        }
+    )
 
     print(performance_table)
 
